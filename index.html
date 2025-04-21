@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tebak Kata</title>
+  <style>
+    :root {
+      --bg-color: #b4e1f3;
+      --primary-color: #2ecc71;
+      --text-color: #2c3e50;
+      --btn-color: #f39c12;
+    }
+    body.dark-mode {
+      --bg-color: #1c1c1c;
+      --primary-color: #27ae60;
+      --text-color: #ecf0f1;
+      --btn-color: #e67e22;
+    }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: linear-gradient(var(--bg-color), #64b2d1);
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      font-size: 50px;
+      margin-top: 30px;
+      letter-spacing: 10px;
+    }
+    .menu, .settings, .leaderboard, .mode {
+      margin-top: 40px;
+      display: none;
+    }
+    .menu button, .settings button, .settings select, .settings input, .mode button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      border: none;
+      border-radius: 10px;
+    }
+    .menu button, .settings button, .mode button {
+      background-color: var(--primary-color);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+    .menu button:active, .settings button:active, .icons button:active, .game button:active, .mode button:active {
+      transform: scale(0.95);
+    }
+    .icons {
+      margin-top: 30px;
+    }
+    .icons button {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      margin: 10px;
+      background-color: var(--btn-color);
+      font-size: 24px;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+    .game {
+      display: none;
+      margin: 30px auto;
+      padding: 30px;
+      max-width: 500px;
+      background-color: white;
+      border-radius: 20px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    body.dark-mode .game {
+      background-color: #2c3e50;
+      color: white;
+    }
+    .question {
+      font-size: 24px;
+      margin: 20px 0;
+    }
+    .timer {
+      font-size: 20px;
+      color: #e67e22;
+    }
+    input[type="text"] {
+      padding: 10px;
+      font-size: 18px;
+      width: 80%;
+      border: 2px solid #3498db;
+      border-radius: 10px;
+    }
+    .result {
+      font-size: 20px;
+      margin-top: 20px;
+    }
+    .back-button {
+      margin-top: 10px;
+      background-color: #e74c3c;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.4);
+      z-index: 999;
+      font-size: 24px;
+      color: var(--text-color);
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <audio id="bgMusic" loop autoplay>
+    <source src="https://www.bensound.com/bensound-music/bensound-buddy.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="clickSound">
+    <source src="https://www.fesliyanstudios.com/play-mp3/387" type="audio/mpeg">
+  </audio>
+
+  <h1>
+    <span style="color: orange;">T</span><span style="color: orange;">E</span><span style="color: orange;">B</span><span style="color: orange;">A</span><br>
+    <span style="color: red;">K</span><span style="color: red;">A</span><span style="color: red;">T</span><span style="color: red;">A</span>
+  </h1>
+
+  <div class="menu" id="menu">
+    <button onclick="playClick(); startGame()">Mulai Game</button>
+    <button onclick="playClick(); showPracticeMode()">Mode Latihan</button>
+    <button onclick="playClick(); showLeaderboard()">Peringkat</button>
+  </div>
+
+  <div class="settings" id="settings">
+    <label>Jumlah Soal:
+      <select id="jumlahSoal">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </label>
+    <label>Waktu (detik):
+      <input type="number" id="waktuMain" value="300" min="300">
+    </label>
+    <br>
+    <button onclick="playClick(); saveSettings()">Simpan & Kembali</button>
+  </div>
+
+  <div class="icons">
+    <button onclick="playClick(); toggleDarkMode()">🌓</button>
+    <button onclick="playClick(); alert('Petunjuk permainan: Susun kata dari huruf acak!')">❓</button>
+    <button onclick="playClick(); showSettings()">⚙️</button>
+  </div>
+
+  <div class="game" id="game">
+    <div class="timer" id="timer"></div>
+    <div class="level" id="level"></div>
+    <input type="text" id="answer" placeholder="Jawaban kamu...">
+    <div class="question" id="question"></div>
+    <button onclick="playClick(); checkAnswer()">Kirim</button>
+    <div class="result" id="result"></div>
+    <br>
+    <button class="back-button" onclick="playClick(); goBack()">Kembali</button>
+  </div>
+
+  <div class="leaderboard" id="leaderboard">
+    <h2>Peringkat</h2>
+    <ol id="rankingList"></ol>
+    <button onclick="playClick(); goBack()">Kembali</button>
+  </div>
+
+  <div id="popup" class="popup"></div>
+
+  <script>
+    const clickSound = document.getElementById("clickSound");
+    function playClick() {
+      clickSound.currentTime = 0;
+      clickSound.play();
+    }
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+    }
+    function showPracticeMode() {
+      alert("Mode latihan aktif - soal tanpa batas waktu dan peringkat!");
+      // Tambahkan logika mode latihan di sini
+    }
+    function showLeaderboard() {
+      document.getElementById("menu").style.display = "none";
+      document.getElementById("leaderboard").style.display = "block";
+      document.getElementById("rankingList").innerHTML = '<li>🧠 Kamu - 80%</li><li>🐱 Meow - 70%</li><li>🐶 Doggo - 60%</li>';
+    }
+  </script>
+  <script>
+const hewan = [
+      "KUCING", "ANJING", "GAJAH", "ZEBRA", "KELINCI", "SAPI", "DOMBA", "ULAR", "BURUNG", "IKAN",
+      "HARIMAU", "SINGA", "BADAK", "BIAWAK", "CICAK", "TOKEK", "SEMUT", "NYAMUK", "LEBAH", "KUPU",
+      "BELALANG", "KODOK", "KURA", "KERBAU", "BEBEK", "ANGSA", "MERPATI", "KAKAKTUA", "PANDA", "KOALA",
+      "TUPAI", "KANCIL", "RUSA", "KERA", "MONYET", "ORANGUTAN", "BABI", "ULAT", "CACING", "SIPUT",
+      "RAJAWALI", "ELANG", "HIU", "PAUS", "LUMBA", "ANAKONDA", "BUAYA", "BANGAU", "FLAMINGO", "KUKANG",
+      "LEMUR", "BERUANG", "MARMUT", "SUGARGLIDER", "SERIGALA", "MUSANG", "LANDAK", "TIKUS", "BURUNGHANTU", "GAGAK",
+      "MERAK", "CENDRAWASIH", "PELIKAN", "KARANGGAJAH", "GURITA", "LOBSTER", "RAKUN", "TARSIUS", "TAPIR", "KUTU",
+      "KUMBANG", "JANGKRIK", "CAPUNG", "LALAT", "KECOA", "BELUT", "BELANGKAS", "BINTURONG", "KEDASIH", "TRENGGILING",
+      "GALEK", "GURAME", "PATIN", "LELE", "NILA", "KETAM", "TENGGIRI", "LOHAN", "ARWANA", "KAKAP",
+      "HIU", "PAUS", "BUNTAL", "DUYUNG", "MANATEE", "UDANG", "KURA", "PENYU", "KERANG", "TIRAM"
+    ];
+
+    const questions = hewan.slice(0, 100).map(h => {
+      return {
+        q: `Kata kebalik: ${[...h].reverse().join("")}`,
+        a: h
+      };
+    });
+
+    let soalDipilih = [];
+    let current = 0;
+    let timeLeft;
+    let timer;
+
+    document.getElementById("menu").style.display = "block";
+
+    function showPopup(text) {
+      const popup = document.getElementById("popup");
+      popup.textContent = text;
+      popup.style.display = "block";
+      setTimeout(() => popup.style.display = "none", 3000);
+    }
+
+    function showSettings() {
+      document.getElementById("menu").style.display = "none";
+      document.getElementById("settings").style.display = "block";
+    }
+
+    function saveSettings() {
+      document.getElementById("settings").style.display = "none";
+      document.getElementById("menu").style.display = "block";
+    }
+
+    function startGame() {
+      const jumlah = parseInt(document.getElementById("jumlahSoal").value);
+      const waktu = Math.max(300, parseInt(document.getElementById("waktuMain").value));
+      soalDipilih = questions.slice(0, jumlah);
+      current = 0;
+      timeLeft = waktu;
+
+      document.getElementById("menu").style.display = "none";
+      document.querySelector(".icons").style.display = "none";
+      document.getElementById("game").style.display = "block";
+      nextQuestion();
+    }
+
+    function goBack() {
+      document.getElementById("menu").style.display = "block";
+      document.querySelector(".icons").style.display = "block";
+      document.getElementById("game").style.display = "none";
+      clearInterval(timer);
+    }
+
+    function nextQuestion() {
+      if (current >= soalDipilih.length) {
+        document.getElementById("question").textContent = "Selamat! Kamu telah menyelesaikan semua soal.";
+        document.getElementById("level").textContent = "";
+        document.getElementById("timer").textContent = "";
+        showPopup("🎉 Kamu Menang!");
+        return;
+      }
+      document.getElementById("level").textContent = "Level: " + (current + 1);
+      document.getElementById("question").textContent = soalDipilih[current].q;
+      document.getElementById("answer").value = "";
+      document.getElementById("result").textContent = "";
+      updateTimer();
+      clearInterval(timer);
+      timer = setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+      document.getElementById("timer").textContent = `Waktu: ${timeLeft} detik`;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        showPopup("⏰ Waktu Habis!");
+        document.getElementById("result").textContent = "Waktu habis!";
+        return;
+      }
+      timeLeft--;
+    }
+
+    function checkAnswer() {
+      const userAnswer = document.getElementById("answer").value.trim().toUpperCase();
+      const correctAnswer = soalDipilih[current].a.toUpperCase();
+      if (userAnswer === correctAnswer) {
+        showPopup("✅ Benar!");
+        document.getElementById("result").textContent = "Benar!";
+        current++;
+        setTimeout(nextQuestion, 1000);
+      } else {
+        showPopup("❌ Salah!");
+        document.getElementById("result").textContent = "Salah! Coba lagi.";
+      }
+    }
+  </script>
+</body>
+</html>
